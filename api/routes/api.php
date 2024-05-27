@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ProductBrandController;
 use App\Http\Controllers\Api\ProductsController;
+use App\Http\Controllers\Api\ShelfController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WarehouseController;
 use Illuminate\Http\Request;
@@ -40,5 +41,13 @@ Route::group(['prefix'=>'catalog','as'=>'catalog.'],function (){
     Route::post('warehouse/store',[WarehouseController::class,'store']);
     Route::put('warehouse/{id}/update',[WarehouseController::class,'update']);
     Route::delete('warehouse/{id}/delete',[WarehouseController::class,'delete']);
+
+});
+
+Route::group(['prefix'=>'catalog','as'=>'catalog.'],function () {
+    Route::get('shelf/index', [ShelfController::class, 'index']);
+    Route::post('shelf/store', [ShelfController::class, 'store']);
+    Route::put('shelf/{id}/update',[ShelfController::class,'update']);
+    Route::delete('shelf/{id}/delete',[ShelfController::class,'delete']);
 
 });

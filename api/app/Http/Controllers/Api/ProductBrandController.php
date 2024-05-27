@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ProductBrand;
 use Illuminate\Http\Request;
+use Nette\Schema\ValidationException;
 
 class ProductBrandController extends Controller
 {
@@ -16,29 +17,38 @@ class ProductBrandController extends Controller
 
     public function store(Request $request)
     {
-        $productBrand = new ProductBrand();
-        $productBrand->name = $request->name;
-        $productBrand->save();
-        return response()->json(['message'=>'Eklendi'], 201);
+        try {
+            $validateData = $request->validate([
+                'name' => 'required|string',
+            ]);
+
+            $productBrand = new ProductBrand();
+            $productBrand->name = $request->name;
+            $productBrand->save();
+            return response()->json(['message'=>'Marka eklendi'], 201);
+        }catch (ValidationException $e){
+            return response()->json(['errors'=>$e->errors()]);
+        }catch (\Exception $e){
+            return response()->json(['message'=>'Marka eklenemedi...']);
+        }
+
     }
     public function update(Request $request, $id)
     {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
-        $productBrand = ProductBrand::findOrFail($id);
-
-        if ($productBrand){
+            $productBrand = ProductBrand::findOrFail($id);
             $productBrand->name = $request->name;
             $productBrand->update();
 
             return response()->json(['message' => 'Ürün markası güncellendi'], 200);
-        }
-        else
-        {
-            return response()->json(['message' => 'Ürün Bulunamadı'], 404);
+        }catch (ValidationException $e){
+            return response()->json(['errors'=>$e->errors()]);
+        }catch (\Exception $e){
+            return response()->json(['message'=>'Marka güncellenemedi']);
         }
 
     }

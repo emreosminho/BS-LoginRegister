@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('product_type');
             $table->string('car_type');
-            $table->unsignedBigInteger('product_brand_id');
+            $table->foreignId('product_brand_id')->constrained('product_brands');
             $table->string('unit');
             $table->string('photo');
 

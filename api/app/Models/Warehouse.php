@@ -17,4 +17,9 @@ class Warehouse extends Model
         'district',
         'm2',
     ];
+
+    public  function shelf()
+    {
+        return $this->hasMany(Warehouse::class,'warehouse_id');
+    }
 }

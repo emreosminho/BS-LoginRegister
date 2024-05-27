@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductBrand;
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Nette\Schema\ValidationException;
 
 class ProductsController extends Controller
 {
@@ -17,51 +18,73 @@ class ProductsController extends Controller
 
     public function store(Request $request)
     {
-        $productBrandName = ProductBrand::find($request->product_brand_id)->name;
 
-        $product = new Products();
-        $product-> stock_code = $request->stock_code;
-        $product-> product_name = $request->product_name;
-        $product-> product_type = $request->product_type;
-        $product-> car_type = $request->car_type;
-        $product-> product_brand_id = $request->product_brand_id;
-        $product-> unit = $request->unit;
-        $product-> photo = $request->photo;
-        $product->save();
-        return response()->json(['message'=>'Ürün Eklendi'],200);
+
+        try {
+            // $productBrandName = ProductBrand::find($request->product_brand_id)->name;
+            $validateData = $request->validate([
+                'stock_code' => 'required|integer',
+                'product_name' => 'required|string|max:255',
+                'product_type' => 'required|string|max:255',
+                'car_type' => 'required|string|max:255',
+                'product_brand_id' => 'required|exists:productbrand,id',
+                'unit' => 'required|string|max:255',
+                'photo' => 'nullable|string|max:255',
+            ]);
+            $product = new Products($validateData);
+
+            $product-> stock_code = $request->stock_code;
+            $product-> product_name = $request->product_name;
+            $product-> product_type = $request->product_type;
+            $product-> car_type = $request->car_type;
+            $product-> product_brand_id = $request->product_brand_id;
+            $product-> unit = $request->unit;
+            $product-> photo = $request->photo;
+            $product->save();
+
+            return response()->json(['message'=>'Ürün Eklendi'],200);
+        }catch (ValidationException $e){
+            return response()->json(['errors'=>$e->errors()]);
+        }catch (\Exception $e){
+            return response()->json(['message'=>'Ürün Eklenemedi...']);
+        }
 
     }
 
     public function update(Request $request, $stock_code)
     {
-        $request->validate([
-            'stock_code' => 'required|integer',
-            'product_name' => 'required|string|max:255',
-            'product_type' => 'required|string|max:255',
-            'car_type' => 'required|string|max:255',
-            'product_brand_id' => 'required', // Validation for product_brand_id
-            'unit' => 'required|string|max:255',
-            'photo' => 'nullable|string|max:255',
-        ]);
+        try {
+            $request->validate([
+                'stock_code' => 'required|integer',
+                'product_name' => 'required|string|max:255',
+                'product_type' => 'required|string|max:255',
+                'car_type' => 'required|string|max:255',
+                'product_brand_id' => 'required|exists:productbrand,id',
+                'unit' => 'required|string|max:255',
+                'photo' => 'nullable|string|max:255',
+            ]);
 
             $product = Products::where('stock_code', $stock_code)->first();
 
-            // Check if the product exists
             if ($product) {
-                $product->stock_code = $request->stock_code;
-                $product->product_name = $request->product_name;
-                $product->product_type = $request->product_type;
-                $product->car_type = $request->car_type;
-                $product->product_brand_id = $request->product_brand_id;
-                $product->unit = $request->unit;
-                $product->photo = $request->photo;
-                $product->update();
-
-                return response()->json(['message' => 'Ürün güncellendi'], 200);
+                $product->update([
+                    'stock_code' => $request->stock_code,
+                    'product_name' => $request->product_name,
+                    'product_type' => $request->product_type,
+                    'car_type' => $request->car_type,
+                    'product_brand_id' => $request->product_brand_id,
+                    'unit' => $request->unit,
+                    'photo' => $request->photo,
+                ]);
+                return response()->json(['message'=>'Ürün güncellendi']);
+            } else {
+                return response()->json(['message' => 'Ürün bulunamadı']);
             }
-            else{
-                return response()->json(['message' => 'Ürün bulunamadı'], 404);
-            }
+        }catch (ValidationException $e){
+            return response()->json(['errors'=>$e->errors()]);
+        }catch (\Exception $e){
+            return response()->json(['message'=>'Ürün güncellenemedi...']);
+        }
 
     }
 
@@ -73,7 +96,7 @@ class ProductsController extends Controller
             return response()->json(['message'=>'Ürün silindi']);
         }
         else{
-            return response()->json(['message'=>'Ürün bulunamadı.']);
+            return response()->json(['message'=>'Ürün silinemedi.']);
         }
     }
 }
